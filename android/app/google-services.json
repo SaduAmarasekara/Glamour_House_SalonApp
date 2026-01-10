@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "700733171620",
+    "project_id": "glamour-salon-5007c",
+    "storage_bucket": "glamour-salon-5007c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:700733171620:android:3473aae26a50074a220331",
+        "android_client_info": {
+          "package_name": "com.example.myapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPf4wFKlew-DeNlog-lxPJ7IHmUzRadjI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
