@@ -24,19 +24,20 @@ class _BookingPageState extends State<BookingPage> {
   bool _isLoading = false;
   List<String> _bookedSlots = [];
 
+  // booking_page.dart තුළ ඇති ලැයිස්තුව මෙසේ වෙනස් කරන්න:
   final List<String> services = [
-    'Hair Spa', 'Hair Styling', 'Hair Treatment', 'Massage',
-    'Hair Cut', 'Blade & Trim', 'Skin Care', 'Beard Styling', 'Manicure'
+    'Skin Care', 'Facial', 'Coloring', 'Make-up',
+    'Waxing', 'Manicure', 'Hair Spa', 'Hair Cut',
+    'Blade & Trim', 'Beard Styling'
   ];
 
   @override
   void initState() {
     super.initState();
     _selectedService = widget.selectedService;
-    _fetchBookedSlots(_selectedDate); // පටන් ගන්නා විටම දත්ත ලබා ගැනීම
+    _fetchBookedSlots(_selectedDate);
   }
 
-  // එම දවසේ දැනටමත් වෙන්කර ඇති වේලාවන් පරීක්ෂා කිරීම
   Future<void> _fetchBookedSlots(DateTime date) async {
     String formattedDate = DateFormat('yyyy-MM-dd').format(date);
     setState(() => _isLoading = true);
@@ -54,7 +55,7 @@ class _BookingPageState extends State<BookingPage> {
         })
             .map((doc) => DateFormat('hh:mm a').format((doc['dateTime'] as Timestamp).toDate()))
             .toList();
-        _selectedTimeSlot = null; // දවස වෙනස් කළ විට තේරූ වේලාව ඉවත් කිරීම
+        _selectedTimeSlot = null;
       });
     } catch (e) {
       debugPrint("Error fetching slots: $e");
@@ -63,15 +64,14 @@ class _BookingPageState extends State<BookingPage> {
     }
   }
 
-  // සැලූන් එකේ වැඩ කරන වේලාවන් අනුව Slots ජනනය කිරීම
   List<String> _generateTimeSlots() {
     List<String> slots = [];
-    DateTime start = DateTime(2024, 1, 1, 9, 0); // පෙ.ව. 9:00
-    DateTime end = DateTime(2024, 1, 1, 18, 0);  // ප.ව. 6:00
+    DateTime start = DateTime(2024, 1, 1, 9, 0);
+    DateTime end = DateTime(2024, 1, 1, 18, 0);
 
     while (start.isBefore(end)) {
       slots.add(DateFormat('hh:mm a').format(start));
-      start = start.add(const Duration(minutes: 30)); // විනාඩි 30 ක පරතරය
+      start = start.add(const Duration(minutes: 30));
     }
     return slots;
   }
@@ -82,6 +82,19 @@ class _BookingPageState extends State<BookingPage> {
       initialDate: _selectedDate,
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 30)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFFD81B60),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Color(0xFF2D2D2D),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null && picked != _selectedDate) {
       setState(() => _selectedDate = picked);
@@ -91,7 +104,14 @@ class _BookingPageState extends State<BookingPage> {
 
   Future<void> _bookAppointment() async {
     if (!_formKey.currentState!.validate() || _selectedTimeSlot == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select service and time slot')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please select service and time slot'),
+          backgroundColor: const Color(0xFFD81B60),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
       return;
     }
 
@@ -100,7 +120,6 @@ class _BookingPageState extends State<BookingPage> {
       UserModel? user = await _authService.getCurrentUserData();
       if (user == null) throw Exception('User login required');
 
-      // String කාලය DateTime බවට පත් කිරීම
       DateTime slotTime = DateFormat('hh:mm a').parse(_selectedTimeSlot!);
       DateTime appointmentDT = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, slotTime.hour, slotTime.minute);
 
@@ -108,7 +127,7 @@ class _BookingPageState extends State<BookingPage> {
         'customerId': user.uid,
         'customerName': user.name,
         'service': _selectedService,
-        'dateTime': Timestamp.fromDate(appointmentDT), // Firestore Timestamp
+        'dateTime': Timestamp.fromDate(appointmentDT),
         'status': 'pending',
         'notes': _notesController.text.trim(),
         'createdAt': FieldValue.serverTimestamp(),
@@ -116,10 +135,32 @@ class _BookingPageState extends State<BookingPage> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Booking Confirmed!'), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12),
+                Text('Booking Confirmed!', style: TextStyle(fontWeight: FontWeight.w600)),
+              ],
+            ),
+            backgroundColor: const Color(0xFF4CAF50),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -128,7 +169,37 @@ class _BookingPageState extends State<BookingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Book Now"), centerTitle: true),
+      backgroundColor: const Color(0xFFFFF5F7),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+              ),
+            ],
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF2D2D2D), size: 18),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        title: const Text(
+          "Book Appointment",
+          style: TextStyle(
+            color: Color(0xFF2D2D2D),
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -136,16 +207,22 @@ class _BookingPageState extends State<BookingPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _buildSectionTitle("Select Service", Icons.spa_rounded),
+              const SizedBox(height: 12),
               _buildDropdown(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
+              _buildSectionTitle("Choose Date", Icons.calendar_today_rounded),
+              const SizedBox(height: 12),
               _buildDatePicker(),
-              const SizedBox(height: 25),
-              const Text("Select a Time Slot", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              const SizedBox(height: 15),
+              const SizedBox(height: 24),
+              _buildSectionTitle("Available Time Slots", Icons.access_time_rounded),
+              const SizedBox(height: 12),
               _buildTimeSlotsGrid(),
-              const SizedBox(height: 25),
+              const SizedBox(height: 24),
+              _buildSectionTitle("Additional Notes", Icons.edit_note_rounded),
+              const SizedBox(height: 12),
               _buildNotesField(),
-              const SizedBox(height: 35),
+              const SizedBox(height: 32),
               _buildSubmitButton(),
             ],
           ),
@@ -154,54 +231,270 @@ class _BookingPageState extends State<BookingPage> {
     );
   }
 
+  Widget _buildSectionTitle(String title, IconData icon) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFFD81B60).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: const Color(0xFFD81B60), size: 20),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 16,
+            color: Color(0xFF2D2D2D),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildDropdown() {
-    return DropdownButtonFormField<String>(
-      value: _selectedService,
-      decoration: InputDecoration(labelText: "Service", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
-      items: services.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
-      onChanged: (v) => setState(() => _selectedService = v),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: DropdownButtonFormField<String>(
+        value: _selectedService,
+        decoration: InputDecoration(
+          labelText: "Choose a service",
+          labelStyle: const TextStyle(color: Color(0xFF8E8E93)),
+          prefixIcon: const Icon(Icons.design_services_rounded, color: Color(0xFFD81B60)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        ),
+        items: services.map((s) => DropdownMenuItem(value: s, child: Text(s, style: const TextStyle(fontWeight: FontWeight.w500)))).toList(),
+        onChanged: (v) => setState(() => _selectedService = v),
+      ),
     );
   }
 
   Widget _buildDatePicker() {
-    return ListTile(
-      tileColor: Colors.pink.withValues(alpha: 0.05),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      leading: const Icon(Icons.calendar_month, color: Colors.pink),
-      title: Text(DateFormat('EEEE, MMM dd').format(_selectedDate)),
-      trailing: const Text("Change", style: TextStyle(color: Colors.pink, fontWeight: FontWeight.bold)),
+    return InkWell(
       onTap: _selectDate,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFD81B60).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.calendar_month_rounded, color: Color(0xFFD81B60), size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Selected Date",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF8E8E93),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    DateFormat('EEEE, MMM dd, yyyy').format(_selectedDate),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF2D2D2D),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, color: Color(0xFFD81B60), size: 16),
+          ],
+        ),
+      ),
     );
   }
 
   Widget _buildTimeSlotsGrid() {
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(color: Color(0xFFD81B60)),
+        ),
+      );
+    }
+
     return Wrap(
-      spacing: 10, runSpacing: 10,
+      spacing: 12,
+      runSpacing: 12,
       children: _generateTimeSlots().map((slot) {
         bool isBooked = _bookedSlots.contains(slot);
         bool isSelected = _selectedTimeSlot == slot;
-        return ChoiceChip(
-          label: Text(slot),
-          selected: isSelected,
-          onSelected: isBooked ? null : (selected) => setState(() => _selectedTimeSlot = slot),
-          selectedColor: Colors.pink,
-          labelStyle: TextStyle(color: isSelected ? Colors.white : (isBooked ? Colors.grey : Colors.black)),
+        return GestureDetector(
+          onTap: isBooked ? null : () => setState(() => _selectedTimeSlot = slot),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: isSelected
+                  ? const LinearGradient(
+                colors: [Color(0xFFD81B60), Color(0xFFFF6090)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+                  : null,
+              color: isSelected
+                  ? null
+                  : isBooked
+                  ? Colors.grey[200]
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected
+                    ? Colors.transparent
+                    : isBooked
+                    ? Colors.grey[300]!
+                    : const Color(0xFFE0E0E0),
+                width: 1.5,
+              ),
+              boxShadow: isSelected
+                  ? [
+                BoxShadow(
+                  color: const Color(0xFFD81B60).withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+                  : [],
+            ),
+            child: Text(
+              slot,
+              style: TextStyle(
+                color: isSelected
+                    ? Colors.white
+                    : isBooked
+                    ? Colors.grey[400]
+                    : const Color(0xFF2D2D2D),
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+          ),
         );
       }).toList(),
     );
   }
 
   Widget _buildNotesField() {
-    return TextField(controller: _notesController, decoration: const InputDecoration(hintText: "Any special notes? (Optional)", border: OutlineInputBorder()));
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: _notesController,
+        maxLines: 4,
+        decoration: InputDecoration(
+          hintText: "Any special requests or notes? (Optional)",
+          hintStyle: const TextStyle(color: Color(0xFF8E8E93), fontSize: 14),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.all(16),
+        ),
+      ),
+    );
   }
 
   Widget _buildSubmitButton() {
-    return SizedBox(
-      width: double.infinity, height: 55,
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFD81B60), Color(0xFFFF6090)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFD81B60).withOpacity(0.4),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       child: ElevatedButton(
         onPressed: _isLoading ? null : _bookAppointment,
-        style: ElevatedButton.styleFrom(backgroundColor: Colors.pink, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
-        child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text("Confirm Booking"),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+        child: _isLoading
+            ? const SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+        )
+            : const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.check_circle_outline, color: Colors.white, size: 22),
+            SizedBox(width: 10),
+            Text(
+              "Confirm Booking",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
