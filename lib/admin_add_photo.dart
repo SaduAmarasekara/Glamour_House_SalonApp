@@ -54,10 +54,7 @@ class _AdminAddPhotoState extends State<AdminAddPhoto> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error picking image: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Error picking image: ${e.toString()}'), backgroundColor: Colors.red),
       );
     }
   }
@@ -66,10 +63,7 @@ class _AdminAddPhotoState extends State<AdminAddPhoto> {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select an image'),
-          backgroundColor: Colors.red,
-        ),
+        const SnackBar(content: Text('Please select an image'), backgroundColor: Colors.red),
       );
       return;
     }
@@ -80,7 +74,7 @@ class _AdminAddPhotoState extends State<AdminAddPhoto> {
       UserModel? user = await _authService.getCurrentUserData();
       if (user == null) throw Exception('User not found');
 
-      // Upload image to Firebase Storage
+      // Firebase Storage එකට පින්තූරය Upload කිරීම
       String fileName = DateTime.now().millisecondsSinceEpoch.toString();
       Reference ref = _storage.ref().child('gallery/$fileName.jpg');
 
@@ -88,7 +82,7 @@ class _AdminAddPhotoState extends State<AdminAddPhoto> {
       TaskSnapshot snapshot = await uploadTask;
       String downloadUrl = await snapshot.ref.getDownloadURL();
 
-      // Save to Firestore
+      // Firestore එකේ දත්ත ගබඩා කිරීම
       GalleryPhoto photo = GalleryPhoto(
         imageUrl: downloadUrl,
         title: _titleController.text.trim(),
@@ -102,193 +96,97 @@ class _AdminAddPhotoState extends State<AdminAddPhoto> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Photo uploaded successfully!'),
-            backgroundColor: Colors.green,
-          ),
+          const SnackBar(content: Text('Style added successfully!'), backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Upload failed: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Upload failed: ${e.toString()}'), backgroundColor: Colors.red),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isUploading = false);
-      }
+      if (mounted) setState(() => _isUploading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF8F9FA), // Dashboard එකේ පසුබිම් වර්ණය
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color(0xFFE91E63),
-        title: const Text('Add Photo'),
+        backgroundColor: const Color(0xFFD81B60), // ඔබේ ප්‍රධාන Pink වර්ණය
+        title: const Text('Add New Style', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(24.0),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Image Picker
+                // --- IMAGE PICKER CARD ---
                 GestureDetector(
                   onTap: _pickImage,
                   child: Container(
                     height: 250,
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: Colors.grey.shade300,
-                        width: 2,
-                        style: BorderStyle.solid,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                        ),
-                      ],
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15)],
+                      border: Border.all(color: const Color(0xFFD81B60).withOpacity(0.1), width: 2),
                     ),
                     child: _selectedImage == null
                         ? Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.add_photo_alternate,
-                          size: 80,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Tap to select image',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[600],
-                          ),
-                        ),
+                        Icon(Icons.add_photo_alternate_rounded, size: 70, color: const Color(0xFFD81B60).withOpacity(0.5)),
+                        const SizedBox(height: 12),
+                        const Text('Tap to choose a stunning style', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500)),
                       ],
                     )
                         : ClipRRect(
-                      borderRadius: BorderRadius.circular(14),
-                      child: Image.file(
-                        _selectedImage!,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                      ),
+                      borderRadius: BorderRadius.circular(18),
+                      child: Image.file(_selectedImage!, fit: BoxFit.cover, width: double.infinity),
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                // Title Field
-                TextFormField(
-                  controller: _titleController,
-                  decoration: InputDecoration(
-                    labelText: 'Photo Title',
-                    prefixIcon: const Icon(Icons.title),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Color(0xFFE91E63),
-                        width: 2,
-                      ),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a title';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                // Category Dropdown
-                DropdownButtonFormField<String>(
-                  value: _selectedCategory,
-                  decoration: InputDecoration(
-                    labelText: 'Category',
-                    prefixIcon: const Icon(Icons.category),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Color(0xFFE91E63),
-                        width: 2,
-                      ),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  items: categories.map((category) {
-                    return DropdownMenuItem(
-                      value: category,
-                      child: Text(category),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedCategory = value!;
-                    });
-                  },
                 ),
                 const SizedBox(height: 30),
-                // Upload Button
+                // --- TITLE INPUT ---
+                _buildLabel("Style Title"),
+                TextFormField(
+                  controller: _titleController,
+                  decoration: _inputDecoration("e.g. Modern Fade Cut", Icons.edit),
+                  validator: (value) => (value == null || value.isEmpty) ? 'Please enter a title' : null,
+                ),
+                const SizedBox(height: 20),
+                // --- CATEGORY DROPDOWN ---
+                _buildLabel("Choose Category"),
+                DropdownButtonFormField<String>(
+                  value: _selectedCategory,
+                  decoration: _inputDecoration(null, Icons.category_rounded),
+                  items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                  onChanged: (value) => setState(() => _selectedCategory = value!),
+                ),
+                const SizedBox(height: 40),
+                // --- UPLOAD BUTTON ---
                 SizedBox(
-                  height: 56,
-                  child: ElevatedButton.icon(
+                  height: 60,
+                  child: ElevatedButton(
                     onPressed: _isUploading ? null : _uploadPhoto,
-                    icon: _isUploading
-                        ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                        : const Icon(Icons.upload),
-                    label: Text(
-                      _isUploading ? 'Uploading...' : 'Upload Photo',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE91E63),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 2,
+                      backgroundColor: const Color(0xFFD81B60),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                      elevation: 5,
+                      shadowColor: const Color(0xFFD81B60).withOpacity(0.4),
                     ),
+                    child: _isUploading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text('Add to Gallery', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                   ),
                 ),
               ],
@@ -298,4 +196,19 @@ class _AdminAddPhotoState extends State<AdminAddPhoto> {
       ),
     );
   }
+
+  // --- HELPER UI METHODS ---
+  Widget _buildLabel(String text) => Padding(
+    padding: const EdgeInsets.only(bottom: 8, left: 4),
+    child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black87)),
+  );
+
+  InputDecoration _inputDecoration(String? hint, IconData icon) => InputDecoration(
+    hintText: hint,
+    prefixIcon: Icon(icon, color: const Color(0xFFD81B60)),
+    filled: true,
+    fillColor: Colors.white,
+    border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+    contentPadding: const EdgeInsets.symmetric(vertical: 18),
+  );
 }
