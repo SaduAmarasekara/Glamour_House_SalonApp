@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// --- 1. පරිශීලක තොරතුරු (User Data) ---
 class UserModel {
   final String uid, name, email, role;
   final String? phone;
@@ -22,17 +23,96 @@ class UserModel {
   };
 }
 
+// --- 2. සේවා සහ මිල ගණන් (Salon Services) ---
+class SalonService {
+  final String? id;
+  final String name;
+  final double price;
+  final String category;
+  final String? duration;
+
+  SalonService({
+    this.id,
+    required this.name,
+    required this.price,
+    required this.category,
+    this.duration,
+  });
+
+  factory SalonService.fromFirestore(DocumentSnapshot doc) {
+    Map data = doc.data() as Map;
+    return SalonService(
+      id: doc.id,
+      name: data['name'] ?? '',
+      price: (data['price'] ?? 0).toDouble(),
+      category: data['category'] ?? 'General',
+      duration: data['duration'],
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'price': price,
+      'category': category,
+      'duration': duration,
+    };
+  }
+}
+
+// --- 3. විශේෂඥයින්ගේ විස්තර (Salon Specialists) ---
+class SpecialistModel {
+  final String? id;
+  final String name;
+  final String imageUrl;
+  final String specialization;
+  final double rating;
+  final String? phone;
+
+  SpecialistModel({
+    this.id,
+    required this.name,
+    required this.imageUrl,
+    required this.specialization,
+    required this.rating,
+    this.phone,
+  });
+
+  factory SpecialistModel.fromFirestore(DocumentSnapshot doc) {
+    Map data = doc.data() as Map;
+    return SpecialistModel(
+      id: doc.id,
+      name: data['name'] ?? '',
+      imageUrl: data['imageUrl'] ?? '',
+      specialization: data['specialization'] ?? '',
+      rating: (data['rating'] ?? 0).toDouble(),
+      phone: data['phone'],
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'imageUrl': imageUrl,
+      'specialization': specialization,
+      'rating': rating,
+      'phone': phone,
+    };
+  }
+}
+
+// --- 4. වෙන්කරගැනීම් (Appointments) ---
 class Appointment {
   final String? id;
   final String customerId;
   final String customerName;
-  final String? customerEmail; // අලුතින් එකතු කළා
-  final String? customerPhone; // අලුතින් එකතු කළා
+  final String? customerEmail;
+  final String? customerPhone;
   final String service;
   final String status;
-  final String? notes; // අලුතින් එකතු කළා
+  final String? notes;
   final DateTime dateTime;
-  final DateTime? createdAt; // අලුතින් එකතු කළා
+  final DateTime? createdAt;
 
   Appointment({
     this.id,
@@ -78,6 +158,7 @@ class Appointment {
   }
 }
 
+// --- 5. ගැලරියේ පින්තූර (Gallery Photos) ---
 class GalleryPhoto {
   final String? id;
   final String imageUrl;

@@ -1,7 +1,4 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'auth_service.dart';
 import 'models.dart';
@@ -16,12 +13,10 @@ class AdminAddPhoto extends StatefulWidget {
 class _AdminAddPhotoState extends State<AdminAddPhoto> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
+  final _urlController = TextEditingController(); // පින්තූර ලින්ක් එක සඳහා
   final _authService = AuthService();
   final _firestore = FirebaseFirestore.instance;
-  final _storage = FirebaseStorage.instance;
-  final _picker = ImagePicker();
 
-  File? _selectedImage;
   String _selectedCategory = 'Hair Styling';
   bool _isUploading = false;
 
@@ -37,36 +32,12 @@ class _AdminAddPhotoState extends State<AdminAddPhoto> {
   @override
   void dispose() {
     _titleController.dispose();
+    _urlController.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickImage() async {
-    try {
-      final XFile? image = await _picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 70,
-      );
-
-      if (image != null) {
-        setState(() {
-          _selectedImage = File(image.path);
-        });
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking image: ${e.toString()}'), backgroundColor: Colors.red),
-      );
-    }
   }
 
   Future<void> _uploadPhoto() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedImage == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an image'), backgroundColor: Colors.red),
-      );
-      return;
-    }
 
     setState(() => _isUploading = true);
 
@@ -74,17 +45,9 @@ class _AdminAddPhotoState extends State<AdminAddPhoto> {
       UserModel? user = await _authService.getCurrentUserData();
       if (user == null) throw Exception('User not found');
 
-      // Firebase Storage එකට පින්තූරය Upload කිරීම
-      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-      Reference ref = _storage.ref().child('gallery/$fileName.jpg');
-
-      UploadTask uploadTask = ref.putFile(_selectedImage!);
-      TaskSnapshot snapshot = await uploadTask;
-      String downloadUrl = await snapshot.ref.getDownloadURL();
-
-      // Firestore එකේ දත්ත ගබඩා කිරීම
+      // පින්තූරය අප්ලෝඩ් කරන්නේ නැතිව කෙලින්ම URL එක Firestore එකට යැවීම
       GalleryPhoto photo = GalleryPhoto(
-        imageUrl: downloadUrl,
+        imageUrl: _urlController.text.trim(), // ලින්ක් එක මෙතැනට
         title: _titleController.text.trim(),
         category: _selectedCategory,
         uploadedAt: DateTime.now(),
@@ -96,13 +59,13 @@ class _AdminAddPhotoState extends State<AdminAddPhoto> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Style added successfully!'), backgroundColor: Colors.green),
+          const SnackBar(content: Text('Style link added successfully!'), backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Upload failed: ${e.toString()}'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Failed to add: ${e.toString()}'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -113,11 +76,11 @@ class _AdminAddPhotoState extends State<AdminAddPhoto> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA), // Dashboard එකේ පසුබිම් වර්ණය
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color(0xFFD81B60), // ඔබේ ප්‍රධාන Pink වර්ණය
-        title: const Text('Add New Style', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        backgroundColor: const Color(0xFFD81B60),
+        title: const Text('Add Style Link', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -129,33 +92,48 @@ class _AdminAddPhotoState extends State<AdminAddPhoto> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // --- IMAGE PICKER CARD ---
-                GestureDetector(
-                  onTap: _pickImage,
-                  child: Container(
-                    height: 250,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15)],
-                      border: Border.all(color: const Color(0xFFD81B60).withOpacity(0.1), width: 2),
-                    ),
-                    child: _selectedImage == null
-                        ? Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.add_photo_alternate_rounded, size: 70, color: const Color(0xFFD81B60).withOpacity(0.5)),
-                        const SizedBox(height: 12),
-                        const Text('Tap to choose a stunning style', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500)),
-                      ],
-                    )
-                        : ClipRRect(
-                      borderRadius: BorderRadius.circular(18),
-                      child: Image.file(_selectedImage!, fit: BoxFit.cover, width: double.infinity),
-                    ),
+                // --- PREVIEW BOX ---
+                Container(
+                  height: 180,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15)],
+                  ),
+                  child: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _urlController,
+                    builder: (context, value, child) {
+                      if (value.text.isEmpty) {
+                        return Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.link_rounded, size: 50, color: const Color(0xFFD81B60).withOpacity(0.3)),
+                            const Text("Image Preview will appear here", style: TextStyle(color: Colors.grey)),
+                          ],
+                        );
+                      }
+                      return ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Image.network(
+                          value.text,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const Center(child: Text("Invalid Image Link")),
+                        ),
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 30),
+
+                // --- IMAGE URL INPUT ---
+                _buildLabel("Image URL (Link)"),
+                TextFormField(
+                  controller: _urlController,
+                  decoration: _inputDecoration("https://example.com/image.jpg", Icons.image_search_rounded),
+                  validator: (value) => (value == null || value.isEmpty) ? 'Please paste an image link' : null,
+                ),
+                const SizedBox(height: 20),
+
                 // --- TITLE INPUT ---
                 _buildLabel("Style Title"),
                 TextFormField(
@@ -164,6 +142,7 @@ class _AdminAddPhotoState extends State<AdminAddPhoto> {
                   validator: (value) => (value == null || value.isEmpty) ? 'Please enter a title' : null,
                 ),
                 const SizedBox(height: 20),
+
                 // --- CATEGORY DROPDOWN ---
                 _buildLabel("Choose Category"),
                 DropdownButtonFormField<String>(
@@ -173,7 +152,8 @@ class _AdminAddPhotoState extends State<AdminAddPhoto> {
                   onChanged: (value) => setState(() => _selectedCategory = value!),
                 ),
                 const SizedBox(height: 40),
-                // --- UPLOAD BUTTON ---
+
+                // --- SUBMIT BUTTON ---
                 SizedBox(
                   height: 60,
                   child: ElevatedButton(
@@ -182,11 +162,10 @@ class _AdminAddPhotoState extends State<AdminAddPhoto> {
                       backgroundColor: const Color(0xFFD81B60),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                       elevation: 5,
-                      shadowColor: const Color(0xFFD81B60).withOpacity(0.4),
                     ),
                     child: _isUploading
                         ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text('Add to Gallery', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                        : const Text('Save to Gallery', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                   ),
                 ),
               ],
@@ -197,7 +176,6 @@ class _AdminAddPhotoState extends State<AdminAddPhoto> {
     );
   }
 
-  // --- HELPER UI METHODS ---
   Widget _buildLabel(String text) => Padding(
     padding: const EdgeInsets.only(bottom: 8, left: 4),
     child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black87)),
