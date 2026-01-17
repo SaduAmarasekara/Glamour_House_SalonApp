@@ -28,6 +28,8 @@ class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    const Color primaryPink = Color(0xFFD81B60);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
@@ -38,7 +40,7 @@ class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateM
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFFD81B60), Color(0xFFFF6090)],
+              colors: [primaryPink, Color(0xFFFF6090)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -57,7 +59,7 @@ class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateM
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildOverviewTab(), // FIXED
+          _buildOverviewTab(),
           _buildAppointmentsTab(),
           _buildGalleryManagementTab(),
         ],
@@ -65,7 +67,7 @@ class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateM
     );
   }
 
-  // --- 1. STATS & OVERVIEW TAB (FIXED LAYOUT) ---
+  // --- 1. STATS & OVERVIEW TAB ---
   Widget _buildOverviewTab() {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -77,7 +79,7 @@ class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateM
             _buildSectionHeader("Business Performance", Icons.trending_up_rounded),
             const SizedBox(height: 18),
 
-            // --- STATS CARDS SECTION ---
+            // --- STATS CARDS SECTION (3 CARDS IN ONE ROW) ---
             StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance.collection('appointments').snapshots(),
               builder: (context, snapshot) {
@@ -89,22 +91,17 @@ class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateM
                   return _buildNoDataCard("No appointment data available.");
                 }
 
-                // Firestore දත්ත lowercase status අනුව ගණනය කිරීම
                 int total = snapshot.data!.docs.length;
                 int active = snapshot.data!.docs.where((d) => d['status'] == 'pending').length;
                 int confirmed = snapshot.data!.docs.where((d) => d['status'] == 'confirmed').length;
 
-                return Column(
+                return Row(
                   children: [
-                    Row(
-                      children: [
-                        _statBox("Active Jobs", active.toString(), Icons.timer_rounded, Colors.orange),
-                        const SizedBox(width: 16),
-                        _statBox("Confirmed", confirmed.toString(), Icons.check_circle_rounded, Colors.green),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _statBox("Total Appointments", total.toString(), Icons.assignment_rounded, const Color(0xFFD81B60), isFullWidth: true),
+                    _statBox("Active", active.toString(), Icons.timer_rounded, Colors.orange),
+                    const SizedBox(width: 8),
+                    _statBox("Confirmed", confirmed.toString(), Icons.check_circle_rounded, Colors.green),
+                    const SizedBox(width: 8),
+                    _statBox("Total", total.toString(), Icons.assignment_rounded, const Color(0xFFD81B60)),
                   ],
                 );
               },
@@ -140,36 +137,34 @@ class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateM
     );
   }
 
-  // FIXED StatBox layout to prevent rendering issues
-  Widget _statBox(String label, String val, IconData icon, Color color, {bool isFullWidth = false}) {
-    Widget cardBody = Container(
-      padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(color: color.withValues(alpha: 0.12), blurRadius: 20, offset: const Offset(0, 10))
-        ],
-        border: Border.all(color: color.withValues(alpha: 0.1), width: 2),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
-            child: Icon(icon, color: color, size: 26),
-          ),
-          const SizedBox(height: 14),
-          Text(val, style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: color)),
-          const SizedBox(height: 4),
-          Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.bold)),
-        ],
+  // UPDATED StatBox for 3-Column Layout
+  Widget _statBox(String label, String val, IconData icon, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(color: color.withOpacity(0.08), blurRadius: 12, offset: const Offset(0, 6))
+          ],
+          border: Border.all(color: color.withOpacity(0.1), width: 1.5),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(height: 8),
+            Text(val, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: color)),
+            const SizedBox(height: 2),
+            Text(label,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey[600], fontSize: 11, fontWeight: FontWeight.bold)
+            ),
+          ],
+        ),
       ),
     );
-
-    // Row එකක් ඇතුළත ඇති විට පමණක් Expanded භාවිතා කළ යුතුය
-    return isFullWidth ? cardBody : Expanded(child: cardBody);
   }
 
   // --- 2. GALLERY MANAGEMENT TAB ---
@@ -193,7 +188,7 @@ class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateM
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 color: Colors.white,
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
               ),
               child: Column(
                 children: [
@@ -210,7 +205,7 @@ class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateM
                           child: GestureDetector(
                             onTap: () => _confirmDelete(docs[index].id, 'gallery'),
                             child: CircleAvatar(
-                                backgroundColor: Colors.red.withValues(alpha: 0.9),
+                                backgroundColor: Colors.red.withOpacity(0.9),
                                 radius: 16,
                                 child: const Icon(Icons.close_rounded, size: 20, color: Colors.white)
                             ),
@@ -283,7 +278,7 @@ class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateM
               child: ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 leading: CircleAvatar(
-                    backgroundColor: _getStatusColor(status).withValues(alpha: 0.1),
+                    backgroundColor: _getStatusColor(status).withOpacity(0.1),
                     child: Icon(_getStatusIcon(status), color: _getStatusColor(status))
                 ),
                 title: Text(apt.customerName, style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -309,7 +304,7 @@ class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateM
       children: [
         Container(
           padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: const Color(0xFFD81B60).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+          decoration: BoxDecoration(color: const Color(0xFFD81B60).withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
           child: Icon(icon, color: const Color(0xFFD81B60), size: 20),
         ),
         const SizedBox(width: 12),
@@ -324,14 +319,14 @@ class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateM
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
         border: Border.all(color: Colors.grey.shade100),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(8),
         leading: Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: c.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(14)),
+            decoration: BoxDecoration(color: c.withOpacity(0.1), borderRadius: BorderRadius.circular(14)),
             child: Icon(i, color: c)
         ),
         title: Text(t, style: const TextStyle(fontWeight: FontWeight.bold)),

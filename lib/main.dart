@@ -35,7 +35,7 @@ class _SaloonAppState extends State<SaloonApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Beautix Salon',
+      title: 'The Glamour House',
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,
@@ -51,26 +51,19 @@ class _SaloonAppState extends State<SaloonApp> {
         fontFamily: 'Poppins',
       ),
       themeMode: _themeMode,
+      // ආරම්භයේදී Started Page එකට යවයි
       home: const StartedPage(),
     );
   }
 }
 
-// --- AUTH WRAPPER ---
+// --- AUTH WRAPPER (Now redirects to Home for everyone) ---
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
-        }
-        if (snapshot.hasData) return const SaloonHomeScreen();
-        return const LoginPage();
-      },
-    );
+    // ලොග් වී සිටියත් නැතත් Home එකට යවන්න
+    return const SaloonHomeScreen();
   }
 }
 
@@ -82,21 +75,19 @@ class SaloonHomeScreen extends StatefulWidget {
 }
 
 class _SaloonHomeScreenState extends State<SaloonHomeScreen> {
-  int _currentIndex = 2; // Home Button in Middle (Index 2)
+  int _currentIndex = 2; // Home Button in Middle
   final _authService = AuthService();
+  final _auth = FirebaseAuth.instance;
 
-  // Booking Page එකේ සේවාවන්ට අනුකූල සම්පූර්ණ ලැයිස්තුව
   final List<Map<String, dynamic>> allServices = [
-    {"n": "Skin Care", "i": Icons.face_rounded, "c": Color(0xFFFFE5EF)},
-    {"n": "Facial", "i": Icons.self_improvement, "c": Color(0xFFF3E5F5)},
-    {"n": "Coloring", "i": Icons.palette_rounded, "c": Color(0xFFE1F5FE)},
-    {"n": "Make-up", "i": Icons.brush_rounded, "c": Color(0xFFFFEBEE)},
-    {"n": "Waxing", "i": Icons.whatshot_rounded, "c": Color(0xFFFFF3E0)},
-    {"n": "Manicure", "i": Icons.back_hand, "c": Color(0xFFFCE4EC)},
-    {"n": "Hair Spa", "i": Icons.water_drop, "c": Color(0xFFE0F2F1)},
-    {"n": "Hair Cut", "i": Icons.content_cut, "c": Color(0xFFE8F5E9)},
-    {"n": "Blade & Trim", "i": Icons.content_cut_outlined, "c": Color(0xFFF5F5F5)},
-    {"n": "Beard Styling", "i": Icons.face_retouching_natural, "c": Color(0xFFEFEBE9)},
+    {"n": "Skin Care", "i": Icons.face_rounded, "c": const Color(0xFFFFE5EF)},
+    {"n": "Facial", "i": Icons.self_improvement, "c": const Color(0xFFF3E5F5)},
+    {"n": "Coloring", "i": Icons.palette_rounded, "c": const Color(0xFFE1F5FE)},
+    {"n": "Make-up", "i": Icons.brush_rounded, "c": const Color(0xFFFFEBEE)},
+    {"n": "Waxing", "i": Icons.whatshot_rounded, "c": const Color(0xFFFFF3E0)},
+    {"n": "Manicure", "i": Icons.back_hand, "c": const Color(0xFFFCE4EC)},
+    {"n": "Hair Spa", "i": Icons.water_drop, "c": const Color(0xFFE0F2F1)},
+    {"n": "Hair Cut", "i": Icons.content_cut, "c": const Color(0xFFE8F5E9)},
   ];
 
   @override
@@ -130,11 +121,11 @@ class _SaloonHomeScreenState extends State<SaloonHomeScreen> {
           const SizedBox(height: 24),
           _buildSectionTitle("Our Services"),
           const SizedBox(height: 12),
-          _buildFullServicesGrid(), // සියලුම සේවාවන් පෙන්වන Grid එක
+          _buildFullServicesGrid(),
           const SizedBox(height: 30),
           _buildSectionTitle("Trendy Styles", showViewAll: true, onTap: () => setState(() => _currentIndex = 3)),
           const SizedBox(height: 15),
-          _buildTrendyStylesPreview(), // Trendy Styles Preview එක
+          _buildTrendyStylesPreview(),
           const SizedBox(height: 30),
           _buildSectionTitle("Hair Specialists"),
           const SizedBox(height: 15),
@@ -155,7 +146,7 @@ class _SaloonHomeScreenState extends State<SaloonHomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text("Hello, Beautiful!", style: TextStyle(fontSize: 14, color: Colors.grey[600])),
-              const Text("Beautix Salon ✨", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFFD81B60))),
+              const Text("The Glamour House ✨", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFFD81B60))),
             ],
           ),
           _buildProfileCircle(),
@@ -165,31 +156,44 @@ class _SaloonHomeScreenState extends State<SaloonHomeScreen> {
   }
 
   Widget _buildProfileCircle() {
-    return FutureBuilder<UserModel?>(
-      future: _authService.getCurrentUserData(),
+    return StreamBuilder<User?>(
+      stream: _auth.authStateChanges(),
       builder: (context, snapshot) {
-        final user = snapshot.data;
-        return PopupMenuButton<String>(
-          offset: const Offset(0, 50),
-          onSelected: (val) {
-            if (val == 'admin') Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminPanel()));
-            if (val == 'logout') _authService.signOut();
+        // ලොග් වී නැති නම් Login Icon එක පෙන්වන්න
+        if (!snapshot.hasData) {
+          return IconButton(
+            icon: const Icon(Icons.login_rounded, color: Color(0xFFD81B60), size: 30),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginPage())),
+          );
+        }
+
+        // ලොග් වී ඇත්නම් දැනට පවතින Menu එක පෙන්වන්න
+        return FutureBuilder<UserModel?>(
+          future: _authService.getCurrentUserData(),
+          builder: (context, userSnapshot) {
+            final user = userSnapshot.data;
+            return PopupMenuButton<String>(
+              offset: const Offset(0, 50),
+              onSelected: (val) {
+                if (val == 'admin') Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminPanel()));
+                if (val == 'logout') _authService.signOut();
+              },
+              child: Container(
+                width: 50, height: 50,
+                decoration: const BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(colors: [Color(0xFFD81B60), Color(0xFFFF6090)])),
+                child: Center(child: Text(user?.name[0].toUpperCase() ?? "U", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
+              ),
+              itemBuilder: (context) => [
+                if (user?.role == 'admin') const PopupMenuItem(value: 'admin', child: Text("Admin Dashboard")),
+                const PopupMenuItem(value: 'logout', child: Text("Logout")),
+              ],
+            );
           },
-          child: Container(
-            width: 50, height: 50,
-            decoration: const BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(colors: [Color(0xFFD81B60), Color(0xFFFF6090)])),
-            child: Center(child: Text(user?.name[0].toUpperCase() ?? "U", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
-          ),
-          itemBuilder: (context) => [
-            if (user?.role == 'admin') const PopupMenuItem(value: 'admin', child: Text("Admin Dashboard")),
-            const PopupMenuItem(value: 'logout', child: Text("Logout")),
-          ],
         );
       },
     );
   }
 
-  // --- සියලුම සේවාවන් පෙන්වන Grid එක ---
   Widget _buildFullServicesGrid() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -197,17 +201,14 @@ class _SaloonHomeScreenState extends State<SaloonHomeScreen> {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4,
-          mainAxisSpacing: 15,
-          crossAxisSpacing: 15,
-          childAspectRatio: 0.8,
+          crossAxisCount: 4, mainAxisSpacing: 15, crossAxisSpacing: 15, childAspectRatio: 0.8,
         ),
         itemCount: allServices.length,
         itemBuilder: (context, index) {
           final s = allServices[index];
           return GestureDetector(
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => BookingPage(selectedService: s['n']))); //
+              Navigator.push(context, MaterialPageRoute(builder: (context) => BookingPage(selectedService: s['n'])));
             },
             child: Column(
               children: [
@@ -226,7 +227,6 @@ class _SaloonHomeScreenState extends State<SaloonHomeScreen> {
     );
   }
 
-  // --- Trendy Styles Preview (Images from Gallery) ---
   Widget _buildTrendyStylesPreview() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('gallery').limit(4).snapshots(),
@@ -242,12 +242,11 @@ class _SaloonHomeScreenState extends State<SaloonHomeScreen> {
             itemBuilder: (context, index) {
               final photo = docs[index]['imageUrl'];
               return Container(
-                width: 140,
-                margin: const EdgeInsets.only(right: 15),
+                width: 140, margin: const EdgeInsets.only(right: 15),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   image: DecorationImage(image: NetworkImage(photo), fit: BoxFit.cover),
-                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+                  boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
                 ),
               );
             },
@@ -282,8 +281,7 @@ class _SaloonHomeScreenState extends State<SaloonHomeScreen> {
   Widget _buildSpecialistCard(SpecialistModel sp) {
     bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      width: 160,
-      margin: const EdgeInsets.only(right: 16, bottom: 10),
+      width: 160, margin: const EdgeInsets.only(right: 16, bottom: 10),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -346,8 +344,7 @@ class _SaloonHomeScreenState extends State<SaloonHomeScreen> {
   Widget _buildPromoBanner() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(25),
-      height: 160,
+      padding: const EdgeInsets.all(25), height: 160,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         gradient: const LinearGradient(colors: [Color(0xFFD81B60), Color(0xFF880E4F)]),
@@ -356,8 +353,7 @@ class _SaloonHomeScreenState extends State<SaloonHomeScreen> {
         children: [
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text("Summer Glow Up!", style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
                 Text("Get 20% off on your first service.", style: TextStyle(color: Colors.white70, fontSize: 13)),
