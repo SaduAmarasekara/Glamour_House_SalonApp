@@ -51,23 +51,19 @@ class _SaloonAppState extends State<SaloonApp> {
         fontFamily: 'Poppins',
       ),
       themeMode: _themeMode,
-      // ආරම්භයේදී Started Page එකට යවයි
       home: const StartedPage(),
     );
   }
 }
 
-// --- AUTH WRAPPER (Now redirects to Home for everyone) ---
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
   @override
   Widget build(BuildContext context) {
-    // ලොග් වී සිටියත් නැතත් Home එකට යවන්න
     return const SaloonHomeScreen();
   }
 }
 
-// --- MAIN HOME SCREEN ---
 class SaloonHomeScreen extends StatefulWidget {
   const SaloonHomeScreen({super.key});
   @override
@@ -75,7 +71,7 @@ class SaloonHomeScreen extends StatefulWidget {
 }
 
 class _SaloonHomeScreenState extends State<SaloonHomeScreen> {
-  int _currentIndex = 2; // Home Button in Middle
+  int _currentIndex = 2;
   final _authService = AuthService();
   final _auth = FirebaseAuth.instance;
 
@@ -130,7 +126,114 @@ class _SaloonHomeScreenState extends State<SaloonHomeScreen> {
           _buildSectionTitle("Hair Specialists"),
           const SizedBox(height: 15),
           _buildSpecialistsList(),
+          const SizedBox(height: 30),
+
+          // --- මෙන්න අලුතින් එකතු කළ Review Section එක ---
+          _buildReviewSection(),
+
           const SizedBox(height: 100),
+        ],
+      ),
+    );
+  }
+
+  // --- REVIEW SECTION WIDGET ---
+  Widget _buildReviewSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle("What Our Clients Say ✨"),
+        const SizedBox(height: 15),
+        SizedBox(
+          height: 160,
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('reviews')
+                .orderBy('timestamp', descending: true)
+                .limit(5)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator(color: Color(0xFFD81B60)));
+              }
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: Text("No reviews yet. Be the first to rate us!"),
+                );
+              }
+
+              return ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 15),
+                itemCount: snapshot.data!.docs.length,
+                itemBuilder: (context, index) {
+                  var data = snapshot.data!.docs[index].data() as Map<String, dynamic>;
+                  return _buildModernReviewCard(data);
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildModernReviewCard(Map<String, dynamic> data) {
+    bool isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      width: 280,
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: const Color(0xFFD81B60).withOpacity(0.1),
+                child: Text(data['customerName']?[0].toUpperCase() ?? 'U',
+                    style: const TextStyle(color: Color(0xFFD81B60), fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(data['customerName'] ?? 'Guest',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    Text(data['serviceName'] ?? 'Service',
+                        style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  ],
+                ),
+              ),
+              Row(
+                children: List.generate(5, (i) => Icon(
+                  Icons.star_rounded,
+                  size: 16,
+                  color: i < (data['rating'] ?? 5) ? Colors.amber : Colors.grey[300],
+                )),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            "\"${data['comment'] ?? ''}\"",
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 13),
+          ),
         ],
       ),
     );
@@ -159,7 +262,6 @@ class _SaloonHomeScreenState extends State<SaloonHomeScreen> {
     return StreamBuilder<User?>(
       stream: _auth.authStateChanges(),
       builder: (context, snapshot) {
-        // ලොග් වී නැති නම් Login Icon එක පෙන්වන්න
         if (!snapshot.hasData) {
           return IconButton(
             icon: const Icon(Icons.login_rounded, color: Color(0xFFD81B60), size: 30),
@@ -167,7 +269,6 @@ class _SaloonHomeScreenState extends State<SaloonHomeScreen> {
           );
         }
 
-        // ලොග් වී ඇත්නම් දැනට පවතින Menu එක පෙන්වන්න
         return FutureBuilder<UserModel?>(
           future: _authService.getCurrentUserData(),
           builder: (context, userSnapshot) {
