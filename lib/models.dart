@@ -5,10 +5,16 @@ class UserModel {
   final String uid, name, email, role;
   final String? phone;
 
-  UserModel({required this.uid, required this.name, required this.email, required this.role, this.phone});
+  UserModel({
+    required this.uid,
+    required this.name,
+    required this.email,
+    required this.role,
+    this.phone
+  });
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
-    Map data = doc.data() as Map;
+    Map data = doc.data() as Map<String, dynamic>;
     return UserModel(
       uid: doc.id,
       name: data['name'] ?? '',
@@ -40,7 +46,7 @@ class SalonService {
   });
 
   factory SalonService.fromFirestore(DocumentSnapshot doc) {
-    Map data = doc.data() as Map;
+    Map data = doc.data() as Map<String, dynamic>;
     return SalonService(
       id: doc.id,
       name: data['name'] ?? '',
@@ -79,7 +85,7 @@ class SpecialistModel {
   });
 
   factory SpecialistModel.fromFirestore(DocumentSnapshot doc) {
-    Map data = doc.data() as Map;
+    Map data = doc.data() as Map<String, dynamic>;
     return SpecialistModel(
       id: doc.id,
       name: data['name'] ?? '',
@@ -128,7 +134,7 @@ class Appointment {
   });
 
   factory Appointment.fromFirestore(DocumentSnapshot doc) {
-    Map data = doc.data() as Map;
+    Map data = doc.data() as Map<String, dynamic>;
     return Appointment(
       id: doc.id,
       customerId: data['customerId'] ?? '',
@@ -176,6 +182,18 @@ class GalleryPhoto {
     required this.uploadedBy,
   });
 
+  factory GalleryPhoto.fromFirestore(DocumentSnapshot doc) {
+    Map data = doc.data() as Map<String, dynamic>;
+    return GalleryPhoto(
+      id: doc.id,
+      imageUrl: data['imageUrl'] ?? '',
+      title: data['title'] ?? '',
+      category: data['category'] ?? '',
+      uploadedAt: (data['uploadedAt'] as Timestamp).toDate(),
+      uploadedBy: data['uploadedBy'] ?? '',
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'imageUrl': imageUrl,
@@ -185,16 +203,45 @@ class GalleryPhoto {
       'uploadedBy': uploadedBy,
     };
   }
+}
 
-  factory GalleryPhoto.fromFirestore(DocumentSnapshot doc) {
-    Map data = doc.data() as Map;
-    return GalleryPhoto(
+// --- 6. පාරිභෝගික ප්‍රතිචාර (Customer Reviews) ---
+class ReviewModel {
+  final String? id;
+  final String serviceName;
+  final String customerName;
+  final String comment;
+  final double rating;
+  final DateTime timestamp;
+
+  ReviewModel({
+    this.id,
+    required this.serviceName,
+    required this.customerName,
+    required this.comment,
+    required this.rating,
+    required this.timestamp,
+  });
+
+  factory ReviewModel.fromFirestore(DocumentSnapshot doc) {
+    Map data = doc.data() as Map<String, dynamic>;
+    return ReviewModel(
       id: doc.id,
-      imageUrl: data['imageUrl'] ?? '',
-      title: data['title'] ?? '',
-      category: data['category'] ?? '',
-      uploadedAt: (data['uploadedAt'] as Timestamp).toDate(),
-      uploadedBy: data['uploadedBy'] ?? '',
+      serviceName: data['serviceName'] ?? '',
+      customerName: data['customerName'] ?? 'Anonymous',
+      comment: data['comment'] ?? '',
+      rating: (data['rating'] ?? 0).toDouble(),
+      timestamp: (data['timestamp'] as Timestamp).toDate(),
     );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'serviceName': serviceName,
+      'customerName': customerName,
+      'comment': comment,
+      'rating': rating,
+      'timestamp': FieldValue.serverTimestamp(),
+    };
   }
 }

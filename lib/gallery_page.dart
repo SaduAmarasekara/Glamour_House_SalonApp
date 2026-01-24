@@ -6,6 +6,116 @@ import 'models.dart';
 import 'admin_add_photo.dart';
 import 'favourite_page.dart';
 
+// --- NEW DETAIL PAGE TO SHOW REVIEWS ---
+class GalleryDetailKey extends StatelessWidget {
+  final String imageUrl;
+  final String serviceName;
+  final String title;
+
+  const GalleryDetailKey({
+    super.key,
+    required this.imageUrl,
+    required this.serviceName,
+    required this.title,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    bool isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF0F0F0F) : const Color(0xFFFFF5F7),
+      appBar: AppBar(
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: const Color(0xFFD81B60),
+        foregroundColor: Colors.white,
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1. පින්තූරය පෙන්වීම
+            Hero(
+              tag: imageUrl,
+              child: Image.network(
+                imageUrl,
+                width: double.infinity,
+                height: 350,
+                fit: BoxFit.cover,
+              ),
+            ),
+
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 25, 20, 10),
+              child: Text(
+                "What our customers say ✨",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+
+            // 2. මෙම සේවාවට අදාළ Reviews පමණක් පෙරා පෙන්වීම (Filtering)
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('reviews')
+                  .where('serviceName', isEqualTo: serviceName) // Category එක මත පදනම්ව filter වේ
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final reviews = snapshot.data?.docs ?? [];
+
+                if (reviews.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: Center(child: Text("No reviews yet for this style. Be the first to try!")),
+                  );
+                }
+
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: reviews.length,
+                  itemBuilder: (context, index) {
+                    final r = reviews[index].data() as Map<String, dynamic>;
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                        borderRadius: BorderRadius.circular(15),
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+                      ),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: const Color(0xFFD81B60).withOpacity(0.1),
+                          child: Text(r['customerName']?[0].toUpperCase() ?? 'U',
+                              style: const TextStyle(color: Color(0xFFD81B60), fontWeight: FontWeight.bold)),
+                        ),
+                        title: Text(r['customerName'] ?? 'Guest User', style: const TextStyle(fontWeight: FontWeight.w600)),
+                        subtitle: Text(r['comment'] ?? ''),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.star, color: Colors.amber, size: 16),
+                            Text(" ${r['rating']}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+            const SizedBox(height: 50),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// --- MAIN GALLERY PAGE ---
 class GalleryPage extends StatefulWidget {
   const GalleryPage({super.key});
 
@@ -18,7 +128,8 @@ class _GalleryPageState extends State<GalleryPage> {
   String selectedCategory = 'All';
 
   final List<String> categories = [
-    'All', 'Hair Styling', 'Hair Color', 'Makeup', 'Nail Art', 'Skin Care', 'Beard'
+    'All',  'Skin Care', 'Facial', 'Coloring', 'Make-up',
+    'Waxing', 'Manicure', 'Hair Spa', 'Hair Cut',
   ];
 
   Future<void> toggleFavourite(String photoId, Map<String, dynamic> photoData) async {
@@ -49,19 +160,7 @@ class _GalleryPageState extends State<GalleryPage> {
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0F0F0F) : const Color(0xFFFFF5F7),
       appBar: AppBar(
-        title: ShaderMask(
-          shaderCallback: (bounds) => const LinearGradient(
-            colors: [Colors.white, Color(0xFFFFFAFA)],
-          ).createShader(bounds),
-          child: const Text(
-            "Style Gallery ✨",
-            style: TextStyle(
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-              fontSize: 22,
-            ),
-          ),
-        ),
+        title: const Text("Style Gallery ✨", style: TextStyle(fontWeight: FontWeight.w900, color: Colors.white)),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -72,33 +171,10 @@ class _GalleryPageState extends State<GalleryPage> {
           ),
         ),
         centerTitle: true,
-        elevation: 0,
         actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white.withOpacity(0.3),
-                  Colors.white.withOpacity(0.1),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.white.withOpacity(0.3),
-                  blurRadius: 15,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.favorite, color: Colors.white, size: 24),
-              onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const FavouritePage())
-              ),
-            ),
+          IconButton(
+            icon: const Icon(Icons.favorite, color: Colors.white),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const FavouritePage())),
           ),
           _buildAdminAddButton(),
         ],
@@ -117,31 +193,9 @@ class _GalleryPageState extends State<GalleryPage> {
       future: authService.getCurrentUserData(),
       builder: (context, snapshot) {
         if (snapshot.hasData && snapshot.data?.role == 'admin') {
-          return Container(
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white.withOpacity(0.3),
-                  Colors.white.withOpacity(0.1),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.white.withOpacity(0.3),
-                  blurRadius: 15,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.add_a_photo_rounded, color: Colors.white, size: 24),
-              onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AdminAddPhoto())
-              ),
-            ),
+          return IconButton(
+            icon: const Icon(Icons.add_a_photo_rounded, color: Colors.white),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminAddPhoto())),
           );
         }
         return const SizedBox.shrink();
@@ -166,52 +220,15 @@ class _GalleryPageState extends State<GalleryPage> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 decoration: BoxDecoration(
-                  gradient: isSelected
-                      ? const LinearGradient(
-                    colors: [Color(0xFFFF6B9D), Color(0xFFD81B60)],
-                  )
-                      : null,
+                  gradient: isSelected ? const LinearGradient(colors: [Color(0xFFFF6B9D), Color(0xFFD81B60)]) : null,
                   color: isSelected ? null : (isDark ? const Color(0xFF1F1F1F) : Colors.white),
                   borderRadius: BorderRadius.circular(25),
-                  border: Border.all(
-                    color: isSelected
-                        ? Colors.transparent
-                        : const Color(0xFFD81B60).withOpacity(0.3),
-                    width: 1.5,
-                  ),
-                  boxShadow: isSelected
-                      ? [
-                    BoxShadow(
-                      color: const Color(0xFFD81B60).withOpacity(0.5),
-                      blurRadius: 20,
-                      spreadRadius: 2,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                      : [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  border: Border.all(color: const Color(0xFFD81B60).withOpacity(0.3)),
                 ),
                 child: Center(
                   child: Text(
                     categories[index],
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : (isDark ? Colors.white : const Color(0xFF2D1410)),
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                      fontSize: 14,
-                      shadows: isSelected
-                          ? const [
-                        Shadow(
-                          color: Colors.black26,
-                          blurRadius: 5,
-                        ),
-                      ]
-                          : null,
-                    ),
+                    style: TextStyle(color: isSelected ? Colors.white : (isDark ? Colors.white : const Color(0xFF2D1410)), fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -231,88 +248,34 @@ class _GalleryPageState extends State<GalleryPage> {
     return StreamBuilder<QuerySnapshot>(
       stream: query.orderBy('uploadedAt', descending: true).snapshots(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFF6B9D), Color(0xFFD81B60)],
-                ),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFD81B60).withOpacity(0.5),
-                    blurRadius: 30,
-                    spreadRadius: 10,
-                  ),
-                ],
-              ),
-              child: const CircularProgressIndicator(
-                color: Colors.white,
-                strokeWidth: 3,
-              ),
-            ),
-          );
-        }
-
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(30),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFFFFE5EF).withOpacity(0.5),
-                        const Color(0xFFFFF0F5).withOpacity(0.3),
-                      ],
-                    ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.photo_library_outlined,
-                    size: 60,
-                    color: Color(0xFFD81B60),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  "No photos available",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D1410),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "for this category",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
+        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) return const Center(child: Text("No photos available"));
 
         return GridView.builder(
           padding: const EdgeInsets.all(16),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 0.75,
+            crossAxisCount: 2, crossAxisSpacing: 16, mainAxisSpacing: 16, childAspectRatio: 0.75,
           ),
           itemCount: snapshot.data!.docs.length,
           itemBuilder: (context, index) {
             var doc = snapshot.data!.docs[index];
             var data = doc.data() as Map<String, dynamic>;
-            return _buildImageCard(doc.id, data);
+            return GestureDetector(
+              onTap: () {
+                // සේවාවට අදාළ විස්තර සහිත Detail Page එකට යාම
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GalleryDetailKey(
+                      imageUrl: data['imageUrl'],
+                      serviceName: data['category'] ?? 'General',
+                      title: data['title'] ?? 'Style Detail',
+                    ),
+                  ),
+                );
+              },
+              child: _buildImageCard(doc.id, data),
+            );
           },
         );
       },
@@ -325,26 +288,9 @@ class _GalleryPageState extends State<GalleryPage> {
 
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isDark
-              ? [const Color(0xFF2A1A2E), const Color(0xFF1F1620)]
-              : [Colors.white, const Color(0xFFFFFAFD)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(25),
-        border: Border.all(
-          color: const Color(0xFFD81B60).withOpacity(0.2),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFD81B60).withOpacity(0.15),
-            blurRadius: 20,
-            spreadRadius: 2,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -352,156 +298,31 @@ class _GalleryPageState extends State<GalleryPage> {
           Expanded(
             child: Stack(
               children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
-                  child: Stack(
-                    children: [
-                      Image.network(
-                        data['imageUrl'],
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
-                        errorBuilder: (c, e, s) => Container(
-                          color: const Color(0xFFFFE5EF),
-                          child: const Center(
-                            child: Icon(
-                              Icons.broken_image_rounded,
-                              size: 50,
-                              color: Color(0xFFD81B60),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Colors.black.withOpacity(0.1),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                Hero(
+                  tag: data['imageUrl'],
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
+                    child: Image.network(data['imageUrl'], fit: BoxFit.cover, width: double.infinity, height: double.infinity),
                   ),
                 ),
                 Positioned(
-                  top: 10,
-                  right: 10,
-                  child: StreamBuilder<DocumentSnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(user?.uid)
-                        .collection('favourites')
-                        .doc(id)
-                        .snapshots(),
-                    builder: (context, favSnapshot) {
-                      bool isFav = favSnapshot.hasData && favSnapshot.data!.exists;
-                      return GestureDetector(
-                        onTap: () => toggleFavourite(id, data),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: isFav
-                                  ? [
-                                const Color(0xFFFF6B9D).withOpacity(0.9),
-                                const Color(0xFFFF1744).withOpacity(0.9),
-                              ]
-                                  : [
-                                Colors.white.withOpacity(0.9),
-                                Colors.white.withOpacity(0.8),
-                              ],
-                            ),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: isFav
-                                    ? Colors.red.withOpacity(0.5)
-                                    : Colors.black.withOpacity(0.2),
-                                blurRadius: isFav ? 15 : 10,
-                                spreadRadius: isFav ? 3 : 1,
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            isFav ? Icons.favorite : Icons.favorite_border,
-                            color: isFav ? Colors.white : const Color(0xFFD81B60),
-                            size: 22,
-                            shadows: isFav
-                                ? const [
-                              Shadow(
-                                color: Colors.white,
-                                blurRadius: 10,
-                              ),
-                            ]
-                                : null,
-                          ),
-                        ),
-                      );
-                    },
+                  top: 8, right: 8,
+                  child: IconButton(
+                    icon: const Icon(Icons.favorite_border, color: Colors.white),
+                    onPressed: () => toggleFavourite(id, data),
                   ),
                 ),
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: isDark
-                    ? [
-                  const Color(0xFF2A1A2E).withOpacity(0.8),
-                  const Color(0xFF1F1620).withOpacity(0.9),
-                ]
-                    : [
-                  Colors.white.withOpacity(0.95),
-                  const Color(0xFFFFFAFD).withOpacity(0.95),
-                ],
-              ),
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(25)),
-            ),
+          Padding(
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  data['title'] ?? 'Style',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: isDark ? Colors.white : const Color(0xFF2D1410),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFFFE5EF), Color(0xFFFFF0F5)],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFD81B60).withOpacity(0.2),
-                        blurRadius: 8,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    data['category'] ?? '',
-                    style: const TextStyle(
-                      color: Color(0xFFD81B60),
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
+                Text(data['title'] ?? 'Style', style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1),
+                const SizedBox(height: 4),
+                Text(data['category'] ?? '', style: const TextStyle(color: Color(0xFFD81B60), fontSize: 11, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
