@@ -21,12 +21,8 @@ class _AdminAddPhotoState extends State<AdminAddPhoto> {
   bool _isUploading = false;
 
   final List<String> categories = [
-    'Hair Styling',
-    'Hair Color',
-    'Makeup',
-    'Nail Art',
-    'Skin Care',
-    'Beard',
+    'All',  'Skin Care', 'Facial', 'Coloring', 'Make-up',
+    'Waxing', 'Manicure', 'Hair Spa', 'Hair Cut',
   ];
 
   @override
