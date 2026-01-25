@@ -1,65 +1,110 @@
-💇‍♀️ The Glamour House
-Where Style Meets Technology
+# 💇‍♀️ The Glamour House  
+### Smart Salon Appointment & Management System
 
-The Glamour House is a premium cross-platform mobile application crafted to digitally transform the salon experience. Built with cutting-edge technologies like Flutter and Firebase, the app seamlessly connects customers and salon owners through real-time booking, elegant design, and smart management tools.
+![version](https://img.shields.io/badge/version-1.0.0-pink)
+![platform](https://img.shields.io/badge/platform-Flutter-blue)
+![backend](https://img.shields.io/badge/backend-Firebase-orange)
+![status](https://img.shields.io/badge/status-active-success)
 
-Designed with performance, scalability, and aesthetics in mind, The Glamour House delivers a smooth, modern, and luxurious user experience.
+**The Glamour House** is a premium, cross-platform salon management mobile application designed to digitally transform the beauty and wellness experience.  
+Built using **Flutter** and **Firebase**, the system seamlessly connects customers and salon owners through real-time bookings, elegant design, and smart management tools.
 
-✨ Key Features
-📅 Smart Scheduling System
+The application is designed with **performance, scalability, and aesthetics** in mind, delivering a smooth, modern, and luxurious user experience.
 
-Effortless Booking – Instantly book salon services such as Haircuts, Facials, Waxing, and more
+---
 
-Expert Stylist Selection – Choose professionals based on expertise and specialization
+## 🚀 Features
 
-Live Availability Tracking – Real-time slot updates eliminate double bookings
+### 📅 Smart Scheduling System
+- Effortless booking for salon services such as Haircuts, Facials, Waxing, and more
+- Expert stylist selection based on skills and specialization
+- Real-time availability tracking to prevent double bookings
 
-🖼️ Interactive Style Gallery
+### 🖼️ Interactive Style Gallery
+- Categorized service galleries (Hair Coloring, Skin Care, Manicure, etc.)
+- Trusted customer reviews and ratings for each style
+- Visual inspiration to enhance customer decision-making
 
-Curated Categories – Hair Coloring, Skin Care, Manicure, and other premium services
+### 🔐 Role-Based Experience
 
-Trusted Reviews & Ratings – Authentic customer feedback displayed per style
+#### Customer Dashboard
+- Book, view, and manage appointments
+- Save favorite styles and services
+- Track appointment history
 
-🔐 Role-Based Experience
+#### Admin Dashboard
+- Upload and manage style gallery content
+- Monitor bookings and salon performance
+- Manage services and availability
 
-Customer Dashboard
+### 🌗 Elegant Theme Support
+- Seamless Light Mode and Dark Mode switching
+- Consistent UI/UX across all screens
 
-Manage upcoming & past appointments
+---
 
-Save and revisit favorite styles
+## 🛠 Technology Stack
 
-Admin Dashboard
+| Layer | Technology |
+|------|-----------|
+| Frontend | Flutter (Dart) |
+| Database | Firebase Cloud Firestore |
+| Authentication | Firebase Authentication |
+| Cloud Storage | Firebase Storage |
+| State Management | Provider |
 
-Upload and organize gallery content
+---
 
-Track appointments and salon performance
+## 🧪 Quality Assurance & Testing
 
-🌗 Elegant Theme Support
+- Unit Testing for Firestore data parsing
+- Integration Testing for complete booking workflows
+- UI/UX Testing for responsiveness and Dark Mode consistency
 
-Seamless Light & Dark Mode switching for visual comfort and style consistency
+---
 
-🛠️ Technology Stack
+## 🎯 Project Objectives
 
-A modern, scalable, and cloud-powered architecture
+- Digitize traditional salon appointment processes
+- Improve customer convenience and booking efficiency
+- Reduce manual appointment handling for salon owners
+- Deliver a premium, modern, and visually appealing user experience
 
-Layer	Technology
-Frontend	Flutter (Dart) – High-performance, cross-platform UI
-Database	Firebase Cloud Firestore – Real-time NoSQL database
-Authentication	Firebase Authentication – Secure email/password login
-Cloud Storage	Firebase Storage – Optimized image hosting
-State Management	Provider – Clean and efficient state handling
-🧪 Quality & Testing
+---
 
-Unit Testing – Ensures accurate Firestore data parsing
+## 🧩 Software Engineering Concepts Applied
 
-Integration Testing – Validates the complete booking workflow
+- Cross-platform mobile application development
+- Real-time database synchronization
+- Role-based access control
+- Cloud-based storage and authentication
+- State management using Provider
+- Modular UI architecture
 
-UI/UX Testing – Confirms responsiveness and Dark Mode consistency
+---
 
-🔮 Product Roadmap
+## 📈 Product Roadmap
 
-✅ Phase 1 – Core Booking System & Style Gallery
+- Phase 1 – Core Booking System and Style Gallery (Completed)
+- Phase 2 – Secure Online Payments (PayHere / Stripe)
+- Phase 3 – Push Notifications and Appointment Reminders
 
-🚧 Phase 2 – Secure Online Payments (PayHere / Stripe)
+---
 
-📅 Phase 3 – Push Notifications & Appointment Reminders
+## 🏷 ATS Keywords
+
+Flutter, Firebase, Mobile App Development, Cross-Platform Application, Salon Management System, Appointment Booking System, Cloud Firestore, Firebase Authentication, UI/UX Design, Software Engineering Project
+
+---
+
+## 👩‍💻 Author
+
+**Saduni Amarasekara**  
+Undergraduate – BSc (Hons) Software Engineering  
+CINEC Campus
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
