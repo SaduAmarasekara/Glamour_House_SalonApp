@@ -1,105 +1,65 @@
 💇‍♀️ The Glamour House
 Where Style Meets Technology
 
-The Glamour House is a premium, cross-platform mobile application built to modernize the salon experience. Developed using Flutter and Firebase, the app allows customers to book salon services in real time while providing salon owners with a powerful digital platform to showcase their work and manage appointments seamlessly.
+The Glamour House is a premium cross-platform mobile application crafted to digitally transform the salon experience. Built with cutting-edge technologies like Flutter and Firebase, the app seamlessly connects customers and salon owners through real-time booking, elegant design, and smart management tools.
+
+Designed with performance, scalability, and aesthetics in mind, The Glamour House delivers a smooth, modern, and luxurious user experience.
 
 ✨ Key Features
-📅 Smart Scheduling
+📅 Smart Scheduling System
 
-Easy Appointment Booking – Choose from services such as Haircuts, Facials, Waxing, and more
+Effortless Booking – Instantly book salon services such as Haircuts, Facials, Waxing, and more
 
-Specialist Selection – Book your preferred stylist based on skills and expertise
+Expert Stylist Selection – Choose professionals based on expertise and specialization
 
-Real-Time Availability – Live time slots prevent double bookings
+Live Availability Tracking – Real-time slot updates eliminate double bookings
 
 🖼️ Interactive Style Gallery
 
-Categorized Styles – Hair Coloring, Skin Care, Manicure, and more
+Curated Categories – Hair Coloring, Skin Care, Manicure, and other premium services
 
-Customer Reviews & Ratings – View genuine feedback on specific styles
+Trusted Reviews & Ratings – Authentic customer feedback displayed per style
 
-🔐 Role-Based Dashboards
+🔐 Role-Based Experience
 
 Customer Dashboard
 
-View & manage appointments
+Manage upcoming & past appointments
 
-Save favorite styles
+Save and revisit favorite styles
 
 Admin Dashboard
 
-Upload and manage gallery images
+Upload and organize gallery content
 
-Monitor appointments and salon performance
+Track appointments and salon performance
 
-🌗 Theme Support
+🌗 Elegant Theme Support
 
-Smooth switching between Light Mode and Dark Mode
+Seamless Light & Dark Mode switching for visual comfort and style consistency
 
 🛠️ Technology Stack
+
+A modern, scalable, and cloud-powered architecture
+
 Layer	Technology
-Frontend	Flutter (Dart)
-Database	Firebase Cloud Firestore (NoSQL)
-Authentication	Firebase Auth (Email & Password)
-Storage	Firebase Storage (Image Hosting)
-State Management	Provider
-🚀 Getting Started
-📋 Prerequisites
+Frontend	Flutter (Dart) – High-performance, cross-platform UI
+Database	Firebase Cloud Firestore – Real-time NoSQL database
+Authentication	Firebase Authentication – Secure email/password login
+Cloud Storage	Firebase Storage – Optimized image hosting
+State Management	Provider – Clean and efficient state handling
+🧪 Quality & Testing
 
-Flutter SDK ^3.0.0
+Unit Testing – Ensures accurate Firestore data parsing
 
-IDE: Android Studio or VS Code
+Integration Testing – Validates the complete booking workflow
 
-Firebase Project (via Firebase Console)
+UI/UX Testing – Confirms responsiveness and Dark Mode consistency
 
-🔧 Installation & Setup
-1️⃣ Clone the Repository
-git clone https://github.com/yourusername/glamour_salon.git
-cd glamour_salon
-flutter pub get
+🔮 Product Roadmap
 
-2️⃣ Firebase Configuration
+✅ Phase 1 – Core Booking System & Style Gallery
 
-Register the app in Firebase Console
+🚧 Phase 2 – Secure Online Payments (PayHere / Stripe)
 
-Add configuration files:
-
-google-services.json → android/app/
-
-GoogleService-Info.plist → ios/Runner/
-
-Enable Firestore, Authentication, and Storage
-
-Set Firestore & Storage rules for development
-
-3️⃣ Run the App
-flutter run
-
-📂 Project Structure
-lib/
- ├── models/       # Data models (UserModel, Appointment, Review)
- ├── services/     # Firebase services (AuthService, DatabaseService)
- ├── screens/      # UI screens
- │   ├── home/     # Home banners & testimonials
- │   ├── gallery/  # Style gallery & details
- │   ├── booking/  # Appointment booking flow
- │   └── admin/    # Admin management tools
- └── main.dart     # App entry point & theme setup
-
-🧪 Testing Strategy
-
-Unit Tests – Validate Firestore model parsing
-
-Integration Tests – End-to-end booking workflow
-
-UI/UX Tests – Responsiveness and Dark Mode contrast
-
-🔮 Roadmap
-
-✅ Phase 1 – Core Booking & Gallery
-
-🚧 Phase 2 – Payment Integration (PayHere / Stripe)
-
-📅 Phase 3 – Push Notifications for reminders
-
-💎 Phase 4 – AI-based Style Recommendation Engine
+📅 Phase 3 – Push Notifications & Appointment Reminders
