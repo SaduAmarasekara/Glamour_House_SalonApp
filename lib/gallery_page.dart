@@ -6,7 +6,7 @@ import 'models.dart';
 import 'admin_add_photo.dart';
 import 'favourite_page.dart';
 
-// --- NEW DETAIL PAGE TO SHOW REVIEWS ---
+// --- GALLERY DETAIL PAGE ---
 class GalleryDetailKey extends StatelessWidget {
   final String imageUrl;
   final String serviceName;
@@ -34,7 +34,6 @@ class GalleryDetailKey extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. පින්තූරය පෙන්වීම
             Hero(
               tag: imageUrl,
               child: Image.network(
@@ -44,7 +43,6 @@ class GalleryDetailKey extends StatelessWidget {
                 fit: BoxFit.cover,
               ),
             ),
-
             const Padding(
               padding: EdgeInsets.fromLTRB(20, 25, 20, 10),
               child: Text(
@@ -52,27 +50,22 @@ class GalleryDetailKey extends StatelessWidget {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
-
-            // 2. මෙම සේවාවට අදාළ Reviews පමණක් පෙරා පෙන්වීම (Filtering)
             StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('reviews')
-                  .where('serviceName', isEqualTo: serviceName) // Category එක මත පදනම්ව filter වේ
+                  .where('serviceName', isEqualTo: serviceName)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-
                 final reviews = snapshot.data?.docs ?? [];
-
                 if (reviews.isEmpty) {
                   return const Padding(
                     padding: EdgeInsets.all(20.0),
-                    child: Center(child: Text("No reviews yet for this style. Be the first to try!")),
+                    child: Center(child: Text("No reviews yet for this style.")),
                   );
                 }
-
                 return ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -262,7 +255,6 @@ class _GalleryPageState extends State<GalleryPage> {
             var data = doc.data() as Map<String, dynamic>;
             return GestureDetector(
               onTap: () {
-                // සේවාවට අදාළ විස්තර සහිත Detail Page එකට යාම
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -307,9 +299,24 @@ class _GalleryPageState extends State<GalleryPage> {
                 ),
                 Positioned(
                   top: 8, right: 8,
-                  child: IconButton(
-                    icon: const Icon(Icons.favorite_border, color: Colors.white),
-                    onPressed: () => toggleFavourite(id, data),
+                  child: StreamBuilder<DocumentSnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(user?.uid)
+                        .collection('favourites')
+                        .doc(id)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      // මෙතැනදී පින්තූරය favourite කර ඇත්නම් රතු පාටින් පෙන්වයි
+                      bool isFav = snapshot.hasData && snapshot.data!.exists;
+                      return IconButton(
+                        icon: Icon(
+                          isFav ? Icons.favorite : Icons.favorite_border,
+                          color: isFav ? Colors.red : Colors.white,
+                        ),
+                        onPressed: () => toggleFavourite(id, data),
+                      );
+                    },
                   ),
                 ),
               ],
