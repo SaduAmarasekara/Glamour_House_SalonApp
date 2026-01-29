@@ -31,14 +31,14 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
-      // AuthService හරහා Login වීම
+
       await _authService.signIn(
         _emailController.text.trim(),
         _passwordController.text,
       );
 
       if (mounted) {
-        Navigator.pop(context); // සාර්ථක නම් නැවත Home Page එකට යෑම
+        Navigator.pop(context); // back to home page
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Logged in successfully!'),

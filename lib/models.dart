@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-// --- 1. පරිශීලක තොරතුරු (User Data) ---
+
 class UserModel {
   final String uid, name, email, role;
   final String? phone;
@@ -29,7 +29,7 @@ class UserModel {
   };
 }
 
-// --- 2. සේවා සහ මිල ගණන් (Salon Services) ---
+
 class SalonService {
   final String? id;
   final String name;
@@ -66,7 +66,7 @@ class SalonService {
   }
 }
 
-// --- 3. විශේෂඥයින්ගේ විස්තර (Salon Specialists) ---
+
 class SpecialistModel {
   final String? id;
   final String name;
@@ -107,7 +107,7 @@ class SpecialistModel {
   }
 }
 
-// --- 4. වෙන්කරගැනීම් (Appointments) ---
+// --- 4.  (Appointments) ---
 class Appointment {
   final String? id;
   final String customerId;
@@ -164,7 +164,7 @@ class Appointment {
   }
 }
 
-// --- 5. ගැලරියේ පින්තූර (Gallery Photos) ---
+// --- 5.  (Gallery Photos) ---
 class GalleryPhoto {
   final String? id;
   final String imageUrl;
@@ -205,7 +205,7 @@ class GalleryPhoto {
   }
 }
 
-// --- 6. පාරිභෝගික ප්‍රතිචාර (Customer Reviews) ---
+// --- 6.  (Customer Reviews) ---
 class ReviewModel {
   final String? id;
   final String serviceName;

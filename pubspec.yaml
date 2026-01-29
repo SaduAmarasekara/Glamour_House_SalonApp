@@ -14,7 +14,7 @@ dependencies:
   firebase_core: ^3.10.0
   firebase_auth: ^5.4.1
   cloud_firestore: ^5.6.0
-  firebase_storage: ^12.0.0 # අලුත්ම සංස්කරණයට යාවත්කාලීන කළා
+  firebase_storage: ^12.0.0
 
   # State Management
   provider: ^6.1.1

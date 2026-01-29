@@ -307,7 +307,7 @@ class _GalleryPageState extends State<GalleryPage> {
                         .doc(id)
                         .snapshots(),
                     builder: (context, snapshot) {
-                      // මෙතැනදී පින්තූරය favourite කර ඇත්නම් රතු පාටින් පෙන්වයි
+                      //  favourite
                       bool isFav = snapshot.hasData && snapshot.data!.exists;
                       return IconButton(
                         icon: Icon(

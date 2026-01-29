@@ -128,7 +128,7 @@ class _SaloonHomeScreenState extends State<SaloonHomeScreen> {
           _buildSpecialistsList(),
           const SizedBox(height: 30),
 
-          // --- මෙන්න අලුතින් එකතු කළ Review Section එක ---
+          // --- New Review section ---
           _buildReviewSection(),
 
           const SizedBox(height: 100),

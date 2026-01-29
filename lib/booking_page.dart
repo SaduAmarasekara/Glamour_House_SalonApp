@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'auth_service.dart';
 import 'models.dart';
-import 'login_page.dart'; // Login page එක import කළ යුතුය
+import 'login_page.dart';
 
 class BookingPage extends StatefulWidget {
   final String? selectedService;
@@ -99,7 +99,7 @@ class _BookingPageState extends State<BookingPage> {
     }
   }
 
-  // --- මෙතැනදී Login Logic එක ක්‍රියාත්මක වේ ---
+
   Future<void> _bookAppointment() async {
     if (!_formKey.currentState!.validate() || _selectedTimeSlot == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -110,10 +110,10 @@ class _BookingPageState extends State<BookingPage> {
 
     setState(() => _isLoading = true);
     try {
-      // 1. දැනට සිටින පරිශීලකයා බලන්න
+
       User? currentUser = FirebaseAuth.instance.currentUser;
 
-      // 2. ලොග් වී නැති නම් Login Page එකට යවන්න
+
       if (currentUser == null) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -123,7 +123,7 @@ class _BookingPageState extends State<BookingPage> {
         return;
       }
 
-      // 3. ලොග් වී ඇත්නම් පමණක් Firestore එකට දත්ත යවන්න
+
       UserModel? user = await _authService.getCurrentUserData();
       DateTime slotTime = DateFormat('hh:mm a').parse(_selectedTimeSlot!);
       DateTime appointmentDT = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, slotTime.hour, slotTime.minute);

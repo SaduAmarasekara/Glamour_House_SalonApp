@@ -10,7 +10,7 @@ class ManagePrices extends StatelessWidget {
     'Waxing', 'Manicure', 'Hair Spa', 'Hair Cut',
   ];
 
-  // සේවාවට ගැළපෙන අයිකනය ලබා ගැනීමට
+
   IconData _getServiceIcon(String serviceName) {
     switch (serviceName) {
       case 'Skin Care': return Icons.face_retouching_natural;

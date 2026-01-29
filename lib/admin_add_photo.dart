@@ -17,11 +17,11 @@ class _AdminAddPhotoState extends State<AdminAddPhoto> {
   final _authService = AuthService();
   final _firestore = FirebaseFirestore.instance;
 
-  // ආරම්භක අගය (Initial Value) අනිවාර්යයෙන්ම පහත ලිස්ට් එකේ තිබිය යුතුය.
+
   String _selectedCategory = 'Hair Cut';
   bool _isUploading = false;
 
-  // GalleryPage එකේ තියෙන ලිස්ට් එකටම සමාන විය යුතුය.
+  // GalleryPage
   final List<String> categories = [
     'Skin Care', 'Facial', 'Coloring', 'Make-up',
     'Waxing', 'Manicure', 'Hair Spa', 'Hair Cut',
@@ -43,11 +43,11 @@ class _AdminAddPhotoState extends State<AdminAddPhoto> {
       UserModel? user = await _authService.getCurrentUserData();
       if (user == null) throw Exception('User not found');
 
-      // GalleryPhoto model එක හරහා data සකස් කිරීම
+      // GalleryPhoto model
       GalleryPhoto photo = GalleryPhoto(
         imageUrl: _urlController.text.trim(),
         title: _titleController.text.trim(),
-        category: _selectedCategory, // තෝරාගත් Category එක Firestore වෙත යයි
+        category: _selectedCategory, //
         uploadedAt: DateTime.now(),
         uploadedBy: user.uid,
       );

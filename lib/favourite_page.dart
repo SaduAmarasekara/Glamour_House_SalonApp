@@ -18,13 +18,13 @@ class FavouritePage extends StatelessWidget {
         backgroundColor: primaryPink,
         centerTitle: true,
         elevation: 0,
-        // ආපසු යාමට ඇති Icon එක සුදු පැහැ ගැන්වීම
+
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: user == null
           ? const Center(child: Text("Please login to see your favourites"))
           : StreamBuilder<QuerySnapshot>(
-        // Gallery එකේදී Like කළ දත්ත මෙතැනින් ලබාගනී
+
         stream: FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
@@ -36,7 +36,7 @@ class FavouritePage extends StatelessWidget {
             return const Center(child: CircularProgressIndicator(color: primaryPink));
           }
 
-          // දත්ත කිසිවක් නොමැති විට පෙන්වන UI එක
+
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return Center(
               child: Column(
@@ -54,11 +54,11 @@ class FavouritePage extends StatelessWidget {
             );
           }
 
-          // දත්ත පවතින විට Grid එකක් ලෙස පෙන්වීම
+
           return GridView.builder(
             padding: const EdgeInsets.all(16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2, // පේළියකට දෙක බැගින්
+              crossAxisCount: 2,
               crossAxisSpacing: 14,
               mainAxisSpacing: 14,
               childAspectRatio: 0.75,
